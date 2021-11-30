@@ -11,6 +11,8 @@ npm-debug.*
 web-build/
 Key.txt
 AbsensiApp.jks
+yarn.lock
+package-lock.json
 
 # macOS
 .DS_Store
