@@ -12,5 +12,3 @@ Build using
 
 Depedencies
 1. expo-camera
-
-test commit
