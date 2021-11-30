@@ -9,6 +9,8 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+Key.txt
+AbsensiApp.jks
 
 # macOS
 .DS_Store
