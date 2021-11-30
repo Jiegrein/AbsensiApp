@@ -14,4 +14,4 @@ Depedencies
 1. expo-camera
 
 Git
-1. master branch is protected, make pull request to merge
+1. master branch is protected, make a new branch then pull request to merge
