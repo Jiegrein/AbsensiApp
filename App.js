@@ -22,7 +22,7 @@ export default function App() {
   }, []);
 
   //What happens when we scan the bar code
-  const handleBarCode = ({type},{data}) =>{
+  const handleBarcodeScanned = ({type},{data}) =>{
     setScanned(true);
     setText(data);
     console.log('Type: ' +type + '\nData' +data);
@@ -51,9 +51,16 @@ export default function App() {
   else if(hasPermission === true){
     return (
       <View style={styles.container}>
-        <Text>permission PogChamp</Text>
-        <StatusBar style="auto" />
+      <View style={styles.barcodeBox}>
+        <BarCodeScanner
+          onBarcodeScanned={handleBarcodeScanned}
+          barCodeTypes={[BarCodeScanner.Constants.BarCodeType.qr]}
+          style={{ height: 400, width: 400 }} />
       </View>
+      <Text style={styles.maintext}>{text}</Text>
+
+      {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
+    </View>
     );
   }
   
@@ -72,4 +79,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  barcodeBox: {    
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 300,
+    width: 300,
+    overflow: 'hidden',
+    borderRadius: 30,
+    backgroundColor: 'red'
+  },
+
+  maintext:{
+    fontSize: 16,
+    margin: 20
+  }
 });
