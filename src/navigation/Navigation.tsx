@@ -3,8 +3,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import * as React from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
+import RegisterScreen from "../screens/RegisterScreen";
 
-const Drawer = createDrawerNavigator();
+import { RootDrawerParamList } from '../screens/RootDrawerParams';
+const Drawer = createDrawerNavigator<RootDrawerParamList>();
 
 const Navigation = () => {
   return (
@@ -29,10 +31,16 @@ const Navigation = () => {
               headerStyle: {
                 shadowOpacity: 0,
                 elevation: 0,
-              },
-
-              // headerShown: false,
-            }}
+              },}}
+          />
+          <Drawer.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{
+              headerStyle: {
+                shadowOpacity: 0,
+                elevation: 0,
+              },}}
           />
         </Drawer.Navigator>
       </NavigationContainer>
