@@ -5,35 +5,14 @@ import ScanBarCodeService from '../services/ScanBarCodeService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native'
 
-// Used to navigate between pages https://benjaminwoojang.medium.com/react-navigation-with-typescript-270dfa8d5cad
-import { useNavigation } from '@react-navigation/native';
-import { RootDrawerParamList } from '../screens/RootDrawerParams';
-import { DrawerNavigationProp } from "@react-navigation/drawer";
-type homeScreenProp = DrawerNavigationProp<RootDrawerParamList, 'Home'>;
-
 export default function HomeScreen() {
   const [hasPermission, setHasPermission] = useState(Boolean);
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [scanned, setScanned] = useState(false);
   const [working, setWorking] = useState(false);
-  const [hasUuid, setHasUuid] = useState(String);
+  const [hasUuid, setHasUuid] = useState('');
 
-  const navigation = useNavigation<homeScreenProp>();
-
-  // Get inital login
-  const getUserPhoneUuid = async () => {
-    try {
-      const value = await AsyncStorage.getItem('userPhoneId')
-      if (value !== null) {
-        setHasUuid(value)
-      }
-      else {
-        setHasUuid('');
-      }
-    } catch (e) {
-      // error reading value
-    }
-  }
+  const isFocused = useIsFocused();
 
   // What happens when we scan the bar code
   const handleBarCodeScanned = (result: BarCodeScanningResult) => {
@@ -51,46 +30,39 @@ export default function HomeScreen() {
     })()
   }
 
-  const isFocused = useIsFocused()
+  // const isFocused = useIsFocused()
 
   useEffect(() => {
     (async () => {
       console.log("Home useeffect");
-      getUserPhoneUuid();
       askForCameraPermission();
       const workingStatus = await ScanBarCodeService.getAppState();
       setWorking(workingStatus);
     })();
-  }, [isFocused]);
+  }, []);
 
-  if (hasUuid === '') {
-    console.log("Home uuid === ''");
+  if (hasPermission === null) {
+    return (
+      <Text>Izin tidak ada</Text>
+    );
+  }
+  else if (hasPermission === false) {
     return (
       <View style={styles.container}>
-        <Button title="Login" onPress={() => navigation.navigate('Register')} />
-      </View>
-    )
+        <Text>Berikan app akses ke kamera</Text>
+        <Button title={'Allow Camera'} onPress={() => askForCameraPermission()} />
+      </View>)
+  }
+
+  let kerjaText
+  if (working) {
+    kerjaText = <Text>lagi kerja boss</Text>
   }
   else {
-    if (hasPermission === null) {
-      return (
-        <Text>Izin tidak ada</Text>
-      );
-    }
-    else if (hasPermission === false) {
-      return (
-        <View style={styles.container}>
-          <Text>Berikan app akses ke kamera</Text>
-          <Button title={'Allow Camera'} onPress={() => askForCameraPermission()} />
-        </View>)
-    }
-    let kerjaText
-    if (working) {
-      kerjaText = <Text>lagi kerja boss</Text>
-    }
-    else {
-      kerjaText = <Text>lagi nganggur boss</Text>
-    }
+    kerjaText = <Text>lagi nganggur boss</Text>
+  }
+
+  if (isFocused) {
     return (
       <View style={styles.container}>
         <View style={styles.barcodebox}>
@@ -100,6 +72,12 @@ export default function HomeScreen() {
         {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
 
         {kerjaText}
+      </View>
+    );
+  }
+  else {
+    return (
+      <View style={styles.container}>
       </View>
     );
   }

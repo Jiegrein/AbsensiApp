@@ -15,3 +15,7 @@ Depedencies
 
 Git
 1. master branch is protected, make a new branch then pull request to merge
+
+
+Build android
+eas build -p android --profile phonetest

@@ -16,7 +16,7 @@ const Navigation = () => {
     >
       <NavigationContainer>
         <Drawer.Navigator
-          initialRouteName="Home"
+          initialRouteName="Register"
           screenOptions={{
             drawerContentContainerStyle: {
               flex: 1,

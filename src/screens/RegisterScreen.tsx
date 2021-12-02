@@ -11,6 +11,7 @@ type registerScreenProp = DrawerNavigationProp<RootDrawerParamList, 'Register'>;
 
 export default function RegisterScreen() {
     const [hasUuid, setHasUuid] = useState('');
+    const [needRegister, setNeedRegister] = useState(true);
 
     const navigation = useNavigation<registerScreenProp>();
 
@@ -24,22 +25,63 @@ export default function RegisterScreen() {
         }
     }
 
+    // Get inital login
+    const getUserPhoneUuid = async () => {
+        try {
+            const value = await AsyncStorage.getItem('userPhoneId')
+            if (value !== null) {
+                return value
+            }
+            else {
+                return 'notFound'
+            }
+        } catch (e) {
+            // error reading value
+            return 'notFound';
+        }
+    }
+
     const makeNewUuid = () => {
         (async () => {
             const newId = uuid.v4();
             console.log("Created UUID: " + newId);
+            // store uuid yg di generate buat simpen validasi next time
             storeUserPhoneUuid(newId.toString())
+            //api create user disini
             setHasUuid(newId.toString())
         })()
     }
 
     useEffect(() => {
         (async () => {
-            // Get API terus isi ke hasUuid
-        })();
-    }, []);
+            console.log("use effect register");
+            const phoneId = await getUserPhoneUuid();
 
-    if (hasUuid === '') {
+            // Send uuid in phone storage and get API
+            let apiReturn = '';
+            apiReturn = phoneId; //simulasi balikan API
+
+            //if api return somehting set needRegister to true set hasUuid = apiReturn
+            if (apiReturn != '') {
+                setNeedRegister(false);
+            }
+
+            if (needRegister === false && phoneId === apiReturn) {
+                navigation.navigate('Home');
+            }
+            else{
+                setHasUuid(phoneId);
+            }
+        })();
+    }, [makeNewUuid]);
+
+    if (needRegister === true && hasUuid === '') {
+        return (
+            <View style={styles.container}>
+            </View>
+        );
+    }
+    else {
         return (
             <View style={styles.container}>
                 <Text>Name ui</Text>
@@ -47,13 +89,6 @@ export default function RegisterScreen() {
             </View>
         );
     }
-    return(        
-        <View style={styles.container}>
-            <Text>Pindah</Text>
-            <Button title={'Enter'} onPress={() => navigation.navigate('Home')} />
-        </View>
-    )
-    
 }
 
 const styles = StyleSheet.create({
