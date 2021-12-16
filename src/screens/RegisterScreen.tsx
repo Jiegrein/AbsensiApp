@@ -7,18 +7,20 @@ import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 import { RootDrawerParamList } from '../screens/RootDrawerParams';
 import { DrawerNavigationProp } from "@react-navigation/drawer";
+import ScanBarCodeService from '../services/ScanBarCodeService';
+import RegisterService from '../services/RegisterService';
 type registerScreenProp = DrawerNavigationProp<RootDrawerParamList, 'Register'>;
 
 export default function RegisterScreen() {
-    const [hasUuid, setHasUuid] = useState('');
+    const [guid, setGuid] = useState('');
     const [needRegister, setNeedRegister] = useState(true);
 
     const navigation = useNavigation<registerScreenProp>();
 
     // Store inital login
-    const storeUserPhoneUuid = async (value: string) => {
+    const storeUserPhoneGuid = async (value: string) => {
         try {
-            await AsyncStorage.setItem('userPhoneId', value);
+            await AsyncStorage.setItem('workerPhoneId', value);
             //Store uuid ke db sekalian create data di table user
         } catch (e) {
             // saving error
@@ -26,56 +28,68 @@ export default function RegisterScreen() {
     }
 
     // Get inital login
-    const getUserPhoneUuid = async () => {
+    const getWorkerPhoneUuid = async () => {
         try {
-            const value = await AsyncStorage.getItem('userPhoneId')
+            const value = await AsyncStorage.getItem('workerPhoneId')
             if (value !== null) {
                 return value
             }
             else {
-                return 'notFound'
+                return ''
             }
         } catch (e) {
             // error reading value
-            return 'notFound';
+            return '';
         }
     }
 
     const makeNewUuid = () => {
         (async () => {
             const newId = uuid.v4();
-            console.log("Created UUID: " + newId);
-            // store uuid yg di generate buat simpen validasi next time
-            storeUserPhoneUuid(newId.toString())
-            //api create user disini
-            setHasUuid(newId.toString())
+            console.log("Created GUID: " + newId);
+
+            // store uuid yg di generate di Async Storage buat simpen validasi next time
+            storeUserPhoneGuid(newId.toString());
+
+            const model: IRegisterWorkerAccount = {
+                guid: newId.toString(),
+                name: 'Yanto',
+                fullname: 'Heriyanto'
+            };
+            var response = await RegisterService.postWorkerId(model);
+            
+            if(response){
+                setGuid(newId.toString())
+            }
         })()
     }
 
     useEffect(() => {
         (async () => {
             console.log("use effect register");
-            const phoneId = await getUserPhoneUuid();
 
-            // Send uuid in phone storage and get API
-            let apiReturn = '';
-            apiReturn = phoneId; //simulasi balikan API
+            // Get WorkerPhoneId stored in AsyncStorage
+            const phoneId = await getWorkerPhoneUuid();
+            
+            if(phoneId !== ''){
+                // Get WorkerPhoneId stored in Database
+                let apiWorkerPhoneId = await RegisterService.getWorkerPhoneId(phoneId);
 
-            //if api return somehting set needRegister to true set hasUuid = apiReturn
-            if (apiReturn != '') {
-                setNeedRegister(false);
-            }
+                if (apiWorkerPhoneId != '') {
+                    setNeedRegister(false);
+                }
 
-            if (needRegister === false && phoneId === apiReturn) {
-                navigation.navigate('Home');
-            }
-            else{
-                setHasUuid(phoneId);
-            }
+                if (needRegister === false && phoneId === apiWorkerPhoneId) {
+                    navigation.navigate('Home');
+                }
+                else{
+                    setGuid(phoneId);
+                }
+            }            
         })();
     }, [makeNewUuid]);
 
-    if (needRegister === true && hasUuid === '') {
+    if (needRegister === true && guid === '') {
         return (
             <View style={styles.container}>
             </View>

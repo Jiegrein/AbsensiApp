@@ -34,7 +34,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     (async () => {
-      console.log("Home useeffect");
+      console.log("Home useEffect");
       askForCameraPermission();
       const workingStatus = await ScanBarCodeService.getAppState();
       setWorking(workingStatus);
