@@ -1,5 +1,5 @@
 interface IRegisterWorkerAccount{
-    guid: string;
+    id: string;
     fullname: string;
     name: string;
 };

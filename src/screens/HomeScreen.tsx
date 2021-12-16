@@ -30,8 +30,6 @@ export default function HomeScreen() {
     })()
   }
 
-  // const isFocused = useIsFocused()
-
   useEffect(() => {
     (async () => {
       console.log("Home useEffect");
@@ -51,7 +49,8 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <Text>Berikan app akses ke kamera</Text>
         <Button title={'Allow Camera'} onPress={() => askForCameraPermission()} />
-      </View>)
+      </View>
+    );
   }
 
   let kerjaText

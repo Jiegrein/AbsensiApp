@@ -7,13 +7,12 @@ import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 import { RootDrawerParamList } from '../screens/RootDrawerParams';
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import ScanBarCodeService from '../services/ScanBarCodeService';
 import RegisterService from '../services/RegisterService';
 type registerScreenProp = DrawerNavigationProp<RootDrawerParamList, 'Register'>;
 
 export default function RegisterScreen() {
     const [guid, setGuid] = useState('');
-    const [needRegister, setNeedRegister] = useState(true);
+    const [needRegister, setNeedRegister] = useState(false);
 
     const navigation = useNavigation<registerScreenProp>();
 
@@ -24,13 +23,14 @@ export default function RegisterScreen() {
             //Store uuid ke db sekalian create data di table user
         } catch (e) {
             // saving error
+            console.log(e);
         }
     }
 
     // Get inital login
     const getWorkerPhoneUuid = async () => {
         try {
-            const value = await AsyncStorage.getItem('workerPhoneId')
+            const value = await AsyncStorage.getItem('workerPhoneId');
             if (value !== null) {
                 return value
             }
@@ -46,18 +46,16 @@ export default function RegisterScreen() {
     const makeNewUuid = () => {
         (async () => {
             const newId = uuid.v4();
-            console.log("Created GUID: " + newId);
-
             // store uuid yg di generate di Async Storage buat simpen validasi next time
             storeUserPhoneGuid(newId.toString());
 
             const model: IRegisterWorkerAccount = {
-                guid: newId.toString(),
+                id: newId.toString(),
                 name: 'Yanto',
                 fullname: 'Heriyanto'
             };
             var response = await RegisterService.postWorkerId(model);
-            
+
             if(response){
                 setGuid(newId.toString())
             }
@@ -66,12 +64,11 @@ export default function RegisterScreen() {
 
     useEffect(() => {
         (async () => {
-            console.log("use effect register");
-
             // Get WorkerPhoneId stored in AsyncStorage
             const phoneId = await getWorkerPhoneUuid();
             
             if(phoneId !== ''){
+                setNeedRegister(false);
                 // Get WorkerPhoneId stored in Database
                 let apiWorkerPhoneId = await RegisterService.getWorkerPhoneId(phoneId);
 
@@ -85,11 +82,14 @@ export default function RegisterScreen() {
                 else{
                     setGuid(phoneId);
                 }
-            }            
+            }
+            else{
+                setNeedRegister(true);
+            }      
         })();
     }, [makeNewUuid]);
 
-    if (needRegister === true && guid === '') {
+    if (needRegister === false && guid === '') {
         return (
             <View style={styles.container}>
             </View>
