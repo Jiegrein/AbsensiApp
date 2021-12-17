@@ -1,48 +1,41 @@
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from "@react-navigation/native";
 import * as React from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import HomeScreen from "../screens/HomeScreen";
+
+import { StackParamList } from '../screens/StackParams';
+import HomeScreen from '../screens/HomeScreen';
+import ScannerScreen from '../screens/ScannerScreen';
 import RegisterScreen from "../screens/RegisterScreen";
 
-import { RootDrawerParamList } from '../screens/RootDrawerParams';
-const Drawer = createDrawerNavigator<RootDrawerParamList>();
+const Stack = createNativeStackNavigator<StackParamList>();
 
-const Navigation = () => {
+const Navigation : React.FC = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1}}
+      style={{ flex: 1 }}
     >
       <NavigationContainer>
-        <Drawer.Navigator
-          initialRouteName="Register"
-          screenOptions={{
-            drawerContentContainerStyle: {
-              flex: 1,
-              justifyContent: "center",
-            },
-          }}
-        >
-          <Drawer.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              headerStyle: {
-                shadowOpacity: 0,
-                elevation: 0,
-              },}}
-          />
-          <Drawer.Screen
+        <Stack.Navigator>
+          <Stack.Screen
             name="Register"
             component={RegisterScreen}
-            options={{
-              headerStyle: {
-                shadowOpacity: 0,
-                elevation: 0,
-              },}}
           />
-        </Drawer.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            initialParams={{
+              idParam: '',
+              workStatusParam: false,
+              breakStatusParam: false
+            }}
+          />
+          <Stack.Screen
+            name="Scanner"
+            component={ScannerScreen}
+          />
+        </Stack.Navigator>
       </NavigationContainer>
     </KeyboardAvoidingView>
   );

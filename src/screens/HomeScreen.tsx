@@ -1,84 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, Alert } from 'react-native';
-import { BarCodeScanningResult, Camera, PermissionStatus } from 'expo-camera';
-import ScanBarCodeService from '../services/ScanBarCodeService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native'
+import { View, StyleSheet, Image, Pressable } from 'react-native';
 
-export default function HomeScreen() {
-  const [hasPermission, setHasPermission] = useState(Boolean);
-  const [type, setType] = useState(Camera.Constants.Type.back);
-  const [scanned, setScanned] = useState(false);
-  const [working, setWorking] = useState(false);
-  const [hasUuid, setHasUuid] = useState('');
+import { StackParamList } from './StackParams';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import ScanEnum from '../Enum/ScanEnum';
 
-  const isFocused = useIsFocused();
+type Props = NativeStackScreenProps<StackParamList, 'Home'>;
 
-  // What happens when we scan the bar code
-  const handleBarCodeScanned = (result: BarCodeScanningResult) => {
-    setScanned(true);
-    alert(`Bar code with type ${result.type} and data ${result.data} has been scanned!`);
-  };
-
-  const askForCameraPermission = () => {
-    (async () => {
-      const permission = await Camera.requestCameraPermissionsAsync();
-      // Alert.alert('Simple Button pressed');
-      // console.log("Permission : " + permission.status);
-      // console.log(PermissionStatus.GRANTED);
-      setHasPermission(permission.status === PermissionStatus.GRANTED);
-    })()
-  }
+export default function HomeScreen({ route, navigation }: Props) {
+  const { idParam, workStatusParam, breakStatusParam } = route.params;
+  const [workStatus, setWorkStatus] = useState(workStatusParam);
+  const [breakStatus, setBreakStatus] = useState(breakStatusParam);
 
   useEffect(() => {
     (async () => {
       console.log("Home useEffect");
-      askForCameraPermission();
-      const workingStatus = await ScanBarCodeService.getAppState();
-      setWorking(workingStatus);
+      // const status: [boolean, boolean, boolean] = await HomeService.getAppState(idParam);
+
+      console.log('id = ' + idParam);
+      console.log('workStatus = ' + workStatusParam);
+      console.log('breakStatus = ' + breakStatusParam);
+
+      // if (status[0] === true) {
+      //   console.log('masuk 0');
+      //   setWorkStatus(status[1]);
+      //   setBreakStatus(status[2]);
+      // }
+      // else {
+      //   // Handle user not found
+      //   console.log('masuk 1');
+      // }
     })();
   }, []);
 
-  if (hasPermission === null) {
-    return (
-      <Text>Izin tidak ada</Text>
-    );
-  }
-  else if (hasPermission === false) {
+  if (workStatus === false) {
     return (
       <View style={styles.container}>
-        <Text>Berikan app akses ke kamera</Text>
-        <Button title={'Allow Camera'} onPress={() => askForCameraPermission()} />
+        <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
+          <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+        </Pressable>
+        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
+          <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+        </Pressable>
+        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
+          <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+        </Pressable>
+        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
+          <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+        </Pressable>
       </View>
     );
   }
-
-  let kerjaText
-  if (working) {
-    kerjaText = <Text>lagi kerja boss</Text>
-  }
   else {
-    kerjaText = <Text>lagi nganggur boss</Text>
-  }
-
-  if (isFocused) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.barcodebox}>
-          <Camera style={{ height: 500, width: 400 }} type={type} onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}>
-          </Camera>
+    if (breakStatus === false) {
+      return (
+        <View style={styles.container}>
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
+            <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+          </Pressable>
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
+            <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+          </Pressable>
         </View>
-        {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
-
-        {kerjaText}
-      </View>
-    );
-  }
-  else {
-    return (
-      <View style={styles.container}>
-      </View>
-    );
+      );
+    }
+    else {
+      return (
+        <View style={styles.container}>
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
+            <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
+            <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+          </Pressable>
+        </View>
+      );
+    }
   }
 }
 
@@ -115,5 +124,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 30,
     backgroundColor: 'tomato'
-  }
+  },
+  tinyLogo: {
+    width: 50,
+    height: 50,
+  },
+  logo: {
+    width: 66,
+    height: 58,
+  },
 });

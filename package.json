@@ -12,6 +12,7 @@
     "@react-native-async-storage/async-storage": "^1.15.14",
     "@react-navigation/drawer": "^6.1.8",
     "@react-navigation/native": "^6.0.6",
+    "@react-navigation/native-stack": "^6.2.5",
     "@shopify/restyle": "^1.6.1",
     "axios": "^0.24.0",
     "expo": "~43.0.2",

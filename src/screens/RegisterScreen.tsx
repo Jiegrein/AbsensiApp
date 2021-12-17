@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
+import RegisterService from '../services/RegisterService';
 
 // Used to navigate between pages https://benjaminwoojang.medium.com/react-navigation-with-typescript-270dfa8d5cad
 import { useNavigation } from '@react-navigation/native';
-import { RootDrawerParamList } from '../screens/RootDrawerParams';
-import { DrawerNavigationProp } from "@react-navigation/drawer";
-import RegisterService from '../services/RegisterService';
-type registerScreenProp = DrawerNavigationProp<RootDrawerParamList, 'Register'>;
+import { StackParamList } from './StackParams';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type registerScreenProp = NativeStackNavigationProp<StackParamList, 'Register'>;
 
 export default function RegisterScreen() {
     const [guid, setGuid] = useState('');
@@ -66,18 +67,26 @@ export default function RegisterScreen() {
         (async () => {
             // Get WorkerPhoneId stored in AsyncStorage
             const phoneId = await getWorkerPhoneUuid();
+
+            console.log(phoneId);
             
             if(phoneId !== ''){
                 setNeedRegister(false);
-                // Get WorkerPhoneId stored in Database
-                let apiWorkerPhoneId = await RegisterService.getWorkerPhoneId(phoneId);
+                // Get IRegisterWorkerAccount by phoneId stored in Database
+                let model = await RegisterService.getWorkerPhoneId(phoneId);
 
-                if (apiWorkerPhoneId != '') {
+                if (model.id === '') {
                     setNeedRegister(false);
                 }
+                console.log('line 81 : ' + model.id);
 
-                if (needRegister === false && phoneId === apiWorkerPhoneId) {
-                    navigation.navigate('Home');
+                if (needRegister === false && phoneId === model.id) {
+                    console.log('ini model : ' + model);
+                    navigation.navigate('Home', {
+                        idParam: model.id,
+                        workStatusParam: model.workStatus,
+                        breakStatusParam: model.breakStatus
+                    });
                 }
                 else{
                     setGuid(phoneId);
