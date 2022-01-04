@@ -1,66 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, Alert, TouchableHighlight } from 'react-native';
 import { BarCodeScanningResult, Camera, PermissionStatus } from 'expo-camera';
-import ScanBarCodeService from '../services/HomeService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native'
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackParamList } from './StackParams';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import ScanEnum from '../Enum/ScanEnum';
+import ScannerService from '../services/ScannerService';
+import { format } from "date-fns";
 
 type Props = NativeStackScreenProps<StackParamList, 'Scanner'>;
 
 export default function ScannerScreen({ route, navigation }: Props) {
-    const scanEnum = route.params;
+    const { idParam, scanEnumParam, workStatusParam, breakStatusParam } = route.params;
 
     const [hasPermission, setHasPermission] = useState(Boolean);
     const [type, setType] = useState(Camera.Constants.Type.back);
     const [scanned, setScanned] = useState(false);
-    const [working, setWorking] = useState(false);
-    const [hasUuid, setHasUuid] = useState('');
 
     const isFocused = useIsFocused();
 
-    //// What happens when we scan the bar code
-    const handleStartWorkingScan = () => {
-      setScanned(true);
-      // Panggil api buat create worker_log isi start_work
-    };
-    const handleStartBreakScan = () => {
-      setScanned(true);
-      // Panggil api buat create worker_log isi start_work
-    };
-    const handleStopBreakScan = () => {
-      setScanned(true);
-      // Panggil api buat create worker_log isi start_work
-    };
-    const handleStopWorkingScan = () => {
-      setScanned(true);
-      // Panggil api buat create worker_log isi start_work
+    // Store projectId 
+    const getStorageKey = () => {
+        var date = new Date();
+        var formatedDate = format(date, "yyyyMMdd");
+        return formatedDate;
+    }
+
+    // Store Log Id for today
+    const storeLogId = async (logId: string) => {
+        const key = getStorageKey();
+        try {
+            await AsyncStorage.setItem(key, logId)
+        } catch (e) {
+            // saving error
+        }
+    }
+    // Get Log Id for today
+    const getLogId = async () => {
+        const key = getStorageKey();
+        try {
+            const value = await AsyncStorage.getItem(key)
+            if (value !== null) {
+                return value;
+            }
+        } catch (e) {
+            return '';
+        }
+        return '';
+    }
+
+    // What happens when we scan the bar code and decide which one runs
+    const handleBarCodeScanned = async (result: BarCodeScanningResult) => {
+        setScanned(true);
+        alert(`Enum ${scanEnumParam} has been scanned!`);
+
+        const model: LogModel = {
+            workerId: idParam,
+            projectId: result.data,
+            scanEnumId: scanEnumParam
+        };
+
+        if (scanEnumParam === ScanEnum.Start_Work) {
+            handleStartWorkingScan(model)
+            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+        }
+        else {
+            setScanned(true);
+            let logId = await getLogId();
+            if (logId === '') {
+                // Shouldn't be needed, but just in case
+                Alert.alert('Belum mulai kerja', 'Scan mulai kerja terlebih dahulu',
+                    [
+                        {
+                            text: "Return",
+                            onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: breakStatusParam }),
+                            style: "cancel"
+                        }
+                    ])
+            }
+            else {
+                let response = await handleUpdateScan(logId, model);
+                if (response) {
+                    if (scanEnumParam === ScanEnum.Start_Break) {
+                        navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: true });
+                    }
+                    else if (scanEnumParam === ScanEnum.End_Break) {
+                        navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+                    }
+                    else {
+                        navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
+                    }
+                }
+                else {
+                    Alert.alert('Error', 'Lapor ke bos',
+                        [
+                            {
+                                text: "Return",
+                                onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: workStatusParam, breakStatusParam: breakStatusParam }),
+                                style: "cancel"
+                            }
+                        ])
+                }
+            }
+        }
     };
 
-    // What happens when we scan the bar code
-    const handleBarCodeScanned = (result: BarCodeScanningResult) => {
-        setScanned(true);
-        alert(`Bar code with type ${result.type} and data ${result.data} has been scanned!`);
+    // What when scan button is pressed
+    const handleStartWorkingScan = async (model: LogModel) => {
+        let logId = await ScannerService.createLogId(model);
+        storeLogId(logId);
+    };
+    // Handle button other than Start_Work
+    const handleUpdateScan = async (logId: string, model: LogModel) => {
+        return await ScannerService.updateLogId(logId, model);
     };
 
     const askForCameraPermission = () => {
         (async () => {
             const permission = await Camera.requestCameraPermissionsAsync();
-            // Alert.alert('Simple Button pressed');
-            // console.log("Permission : " + permission.status);
-            // console.log(PermissionStatus.GRANTED);
             setHasPermission(permission.status === PermissionStatus.GRANTED);
         })()
     }
 
     useEffect(() => {
         (async () => {
-            console.log("Scanner useEffect");
             askForCameraPermission();
-            // const workingStatus = await ScanBarCodeService.getAppState();
-            // setWorking(workingStatus);
         })();
     }, []);
 
@@ -77,13 +142,6 @@ export default function ScannerScreen({ route, navigation }: Props) {
             </View>
         );
     }
-    let kerjaText
-    if (working) {
-        kerjaText = <Text>lagi kerja boss</Text>
-    }
-    else {
-        kerjaText = <Text>lagi nganggur boss</Text>
-    }
 
     if (isFocused) {
         return (
@@ -92,9 +150,6 @@ export default function ScannerScreen({ route, navigation }: Props) {
                     <Camera style={{ height: 500, width: 400 }} type={type} onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}>
                     </Camera>
                 </View>
-                {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
-
-                {kerjaText}
             </View>
         );
     }

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Image, Pressable } from 'react-native';
+import { View, StyleSheet, Image, Pressable, Text } from 'react-native';
 
 import { StackParamList } from './StackParams';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScanEnum from '../Enum/ScanEnum';
+import { useIsFocused } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<StackParamList, 'Home'>;
 
@@ -12,42 +13,56 @@ export default function HomeScreen({ route, navigation }: Props) {
   const [workStatus, setWorkStatus] = useState(workStatusParam);
   const [breakStatus, setBreakStatus] = useState(breakStatusParam);
 
+  const isFocused = useIsFocused();
+
   useEffect(() => {
     (async () => {
-      console.log("Home useEffect");
-      // const status: [boolean, boolean, boolean] = await HomeService.getAppState(idParam);
-
       console.log('id = ' + idParam);
       console.log('workStatus = ' + workStatusParam);
       console.log('breakStatus = ' + breakStatusParam);
 
-      // if (status[0] === true) {
-      //   console.log('masuk 0');
-      //   setWorkStatus(status[1]);
-      //   setBreakStatus(status[2]);
-      // }
-      // else {
-      //   // Handle user not found
-      //   console.log('masuk 1');
-      // }
+      setWorkStatus(workStatusParam);
+      setBreakStatus(breakStatusParam);
     })();
-  }, []);
+  }, [isFocused]);
 
   if (workStatus === false) {
     return (
       <View style={styles.container}>
-        <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
-          <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-        </Pressable>
-        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
-          <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
-        </Pressable>
-        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
-          <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-        </Pressable>
-        <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
-          <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
-        </Pressable>
+        <Text>Work Status: {String(workStatus)}</Text>
+        <Text>Break Status: {String(breakStatus)}</Text>
+
+        <View style={styles.containerHori}>
+          <Pressable onPress={() => navigation.navigate('Scanner', {
+            idParam: idParam, scanEnumParam: ScanEnum.Start_Work,
+            workStatusParam: workStatus, breakStatusParam: breakStatus
+          })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+            idParam: idParam, scanEnumParam: ScanEnum.End_Work,
+            workStatusParam: workStatus, breakStatusParam: breakStatus
+          })}>
+            <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+          </Pressable>
+        </View>
+
+        <View style={styles.containerHori}>
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+            idParam: idParam, scanEnumParam: ScanEnum.Start_Break,
+            workStatusParam: workStatus, breakStatusParam: breakStatus
+          })}>
+            <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+          </Pressable>
+
+          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+            idParam: idParam, scanEnumParam: ScanEnum.End_Break,
+            workStatusParam: workStatus, breakStatusParam: breakStatus
+          })}>
+            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -55,36 +70,80 @@ export default function HomeScreen({ route, navigation }: Props) {
     if (breakStatus === false) {
       return (
         <View style={styles.container}>
-          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
-            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
-            <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
-          </Pressable>
-          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
-            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
-            <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
-          </Pressable>
+          <Text>Work Status: {String(workStatus)}</Text>
+          <Text>Break Status: {String(breakStatus)}</Text>
+
+          <View style={styles.containerHori}>
+            <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.Start_Work,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+            </Pressable>
+
+            <Pressable onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.End_Work,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+            </Pressable>
+          </View>
+
+          <View style={styles.containerHori}>
+            <Pressable onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.Start_Break,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+            </Pressable>
+
+            <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.End_Break,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+            </Pressable>
+          </View>
         </View>
       );
     }
     else {
       return (
         <View style={styles.container}>
-          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Work })}>
-            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-          </Pressable>
-          <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.Start_Break })}>
-            <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Break })}>
-            <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate('Scanner', { scanEnum: ScanEnum.End_Work })}>
-            <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
-          </Pressable>
+          <Text>Work Status: {String(workStatus)}</Text>
+          <Text>Break Status: {String(breakStatus)}</Text>
+
+          <View style={styles.containerHori}>
+            <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.Start_Work,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+            </Pressable>
+
+            <Pressable onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.End_Work,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
+            </Pressable>
+          </View>
+
+          <View style={styles.containerHori}>
+            <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.Start_Break,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
+            </Pressable>
+
+            <Pressable onPress={() => navigation.navigate('Scanner', {
+              idParam: idParam, scanEnumParam: ScanEnum.End_Break,
+              workStatusParam: workStatus, breakStatusParam: breakStatus
+            })}>
+              <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+            </Pressable>
+          </View>
         </View>
       );
     }
@@ -97,6 +156,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  containerHori: {
+    flexDirection: 'row',
   },
   camera: {
     flex: 1,
@@ -116,21 +178,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
   },
-  barcodebox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 300,
-    width: 300,
-    overflow: 'hidden',
-    borderRadius: 30,
-    backgroundColor: 'tomato'
-  },
   tinyLogo: {
     width: 50,
     height: 50,
   },
   logo: {
-    width: 66,
-    height: 58,
+    width: 150,
+    height: 150,
   },
 });

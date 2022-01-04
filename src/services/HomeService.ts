@@ -5,8 +5,6 @@ const HomeService = {
   getAppState: async (id: string): Promise<[boolean, boolean, boolean]> => {
     const response = await axios.get(baseUrl + id);
     if (response.status == 200) {
-      console.log(response.data);
-      console.log(response.status);
       return [true, response.data.workStatus, response.data.breakStatus];
     }
     else {

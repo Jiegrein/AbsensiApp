@@ -55,7 +55,7 @@ export default function RegisterScreen() {
                 name: 'Yanto',
                 fullname: 'Heriyanto'
             };
-            var response = await RegisterService.postWorkerId(model);
+            let response = await RegisterService.postWorkerId(model);
 
             if(response){
                 setGuid(newId.toString())
@@ -67,8 +67,6 @@ export default function RegisterScreen() {
         (async () => {
             // Get WorkerPhoneId stored in AsyncStorage
             const phoneId = await getWorkerPhoneUuid();
-
-            console.log(phoneId);
             
             if(phoneId !== ''){
                 setNeedRegister(false);
@@ -78,10 +76,8 @@ export default function RegisterScreen() {
                 if (model.id === '') {
                     setNeedRegister(false);
                 }
-                console.log('line 81 : ' + model.id);
 
                 if (needRegister === false && phoneId === model.id) {
-                    console.log('ini model : ' + model);
                     navigation.navigate('Home', {
                         idParam: model.id,
                         workStatusParam: model.workStatus,
