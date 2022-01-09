@@ -29,7 +29,8 @@
     "react-native-screens": "~3.8.0",
     "react-native-uuid": "^2.0.1",
     "react-native-web": "0.17.1",
-    "react-navigation": "^4.4.4"
+    "react-navigation": "^4.4.4",
+    "expo-secure-store": "~11.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

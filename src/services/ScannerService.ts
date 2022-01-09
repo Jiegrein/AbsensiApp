@@ -4,7 +4,7 @@ const baseUrl = 'https://absensi-app-web-api.herokuapp.com/api/v1/worker/';
 
 const ScannerService = {
     createLogId: async (model: LogModel): Promise<string> => {
-        // model.projectId = '142554ad-1df6-4902-a29a-3e948a706b6f';
+        model.projectId = '142554ad-1df6-4902-a29a-3e948a706b6f';
         const response = await axios.post(baseUrl + 'create-log', model);
         if (response.status == 200) {
             return response.data;
@@ -15,7 +15,7 @@ const ScannerService = {
     },
 
     updateLogId: async (logId: string, model: LogModel): Promise<boolean> => {
-        // model.projectId = '142554ad-1df6-4902-a29a-3e948a706b6f';
+        model.projectId = '142554ad-1df6-4902-a29a-3e948a706b6f';
         try {
             const response = await axios.put(baseUrl + 'update-log/' + logId, model);
             return (response.data);

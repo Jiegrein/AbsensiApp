@@ -53,7 +53,6 @@ export default function ScannerScreen({ route, navigation }: Props) {
     // What happens when we scan the bar code and decide which one runs
     const handleBarCodeScanned = async (result: BarCodeScanningResult) => {
         setScanned(true);
-        alert(`Enum ${scanEnumParam} has been scanned!`);
 
         const model: LogModel = {
             workerId: idParam,
@@ -164,7 +163,7 @@ export default function ScannerScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#121212',
         alignItems: 'center',
         justifyContent: 'center',
     },

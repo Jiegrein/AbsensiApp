@@ -78,7 +78,7 @@ export default function RegisterScreen() {
                 }
 
                 if (needRegister === false && phoneId === model.id) {
-                    navigation.navigate('Home', {
+                    navigation.replace('Home', {
                         idParam: model.id,
                         workStatusParam: model.workStatus,
                         breakStatusParam: model.breakStatus
