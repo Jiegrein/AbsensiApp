@@ -22,11 +22,8 @@ export default function ScannerScreen({ route, navigation }: Props) {
 
     // Store projectId 
     const getStorageKey = () => {
-        var date = new Date();
-        var formatedDate = format(date, "yyyyMMdd");
-        return formatedDate;
+        return 'LogId';
     }
-
     // Store Log Id for today
     const storeLogId = async (logId: string) => {
         const key = getStorageKey();
@@ -50,6 +47,33 @@ export default function ScannerScreen({ route, navigation }: Props) {
         return '';
     }
 
+    // Store ProjectId 
+    const getProjectKey = () => {
+        return 'ProjectId';
+    }
+    // Store Project Id for today
+    const storeProjectId = async (projectId: string) => {
+        const key = getProjectKey();
+        try {
+            await AsyncStorage.setItem(key, projectId)
+        } catch (e) {
+            // saving error
+        }
+    }
+    // Get Project Id for today
+    const getProjectId = async () => {
+        const key = getProjectKey();
+        try {
+            const value = await AsyncStorage.getItem(key)
+            if (value !== null) {
+                return value;
+            }
+        } catch (e) {
+            return '';
+        }
+        return '';
+    }
+
     // What happens when we scan the bar code and decide which one runs
     const handleBarCodeScanned = async (result: BarCodeScanningResult) => {
         setScanned(true);
@@ -61,14 +85,19 @@ export default function ScannerScreen({ route, navigation }: Props) {
         };
 
         if (scanEnumParam === ScanEnum.Start_Work) {
-            handleStartWorkingScan(model)
-            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+            let success = await handleStartWorkingScan(model)
+            if (success) {
+                navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+            }
+            else {
+                navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
+            }
         }
         else {
             setScanned(true);
-            let logId = await getLogId();
-            if (logId === '') {
-                // Shouldn't be needed, but just in case
+            let storedLogId = await getLogId();
+            let storedProjectId = await getProjectId();
+            if (storedLogId === '') {
                 Alert.alert('Belum mulai kerja', 'Scan mulai kerja terlebih dahulu',
                     [
                         {
@@ -79,20 +108,8 @@ export default function ScannerScreen({ route, navigation }: Props) {
                     ])
             }
             else {
-                let response = await handleUpdateScan(logId, model);
-                if (response) {
-                    if (scanEnumParam === ScanEnum.Start_Break) {
-                        navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: true });
-                    }
-                    else if (scanEnumParam === ScanEnum.End_Break) {
-                        navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
-                    }
-                    else {
-                        navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
-                    }
-                }
-                else {
-                    Alert.alert('Error', 'Lapor ke bos',
+                if (storedProjectId !== result.data) {
+                    Alert.alert('Error', 'Barcode yang di scan beda dengan yang pas mulai kerja',
                         [
                             {
                                 text: "Return",
@@ -101,15 +118,58 @@ export default function ScannerScreen({ route, navigation }: Props) {
                             }
                         ])
                 }
+                else {
+                    let response = await handleUpdateScan(storedLogId, model);
+                    console.log("Cek res : ");
+                    console.log(response);
+                    if (response) {
+                        if (scanEnumParam === ScanEnum.Start_Break) {
+                            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: true });
+                        }
+                        else if (scanEnumParam === ScanEnum.End_Break) {
+                            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+                        }
+                        else {
+                            navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
+                        }
+                    }
+                    else {
+                        // Shouldn't be needed, but just in case
+                        Alert.alert('Error', 'Lapor ke bos',
+                            [
+                                {
+                                    text: "Return",
+                                    onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: workStatusParam, breakStatusParam: breakStatusParam }),
+                                    style: "cancel"
+                                }
+                            ])
+                    }
+                }
             }
         }
     };
 
     // What when scan button is pressed
     const handleStartWorkingScan = async (model: LogModel) => {
-        let logId = await ScannerService.createLogId(model);
-        storeLogId(logId);
+        let response = await ScannerService.createLogId(model);
+        if (response.logId == '' || response.projectId == '' || response.message != '') {
+            Alert.alert('Error', response.message,
+                [
+                    {
+                        text: "Return",
+                        onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: workStatusParam, breakStatusParam: breakStatusParam }),
+                        style: "cancel"
+                    }
+                ])
+            return false;
+        }
+        else {
+            storeLogId(response.logId);
+            storeProjectId(response.projectId);
+            return true;
+        }
     };
+
     // Handle button other than Start_Work
     const handleUpdateScan = async (logId: string, model: LogModel) => {
         return await ScannerService.updateLogId(logId, model);

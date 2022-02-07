@@ -80,7 +80,7 @@ export default function HomeScreen({ route, navigation }: Props) {
               idParam: idParam, scanEnumParam: ScanEnum.End_Break,
               workStatusParam: workStatus, breakStatusParam: breakStatus
             })} style={{ alignItems: "center" }}>
-              <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+              <Image style={styles.logo} source={require('./../images/logo-stopbreak.png')} />
               <Text style={styles.textLogo}>Selesai Istirahat</Text>
             </Pressable>
           </View>
@@ -137,7 +137,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 idParam: idParam, scanEnumParam: ScanEnum.End_Break,
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
-                <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+                <Image style={styles.logo} source={require('./../images/logo-stopbreak.png')} />
               <Text style={styles.textLogo}>Selesai Istirahat</Text>
               </Pressable>
             </View>
@@ -167,7 +167,7 @@ export default function HomeScreen({ route, navigation }: Props) {
             </View>
 
             <View style={{ paddingHorizontal: 20 }}>
-              <Pressable onPress={() => navigation.navigate('Scanner', {
+              <Pressable disabled={true} onPress={() => navigation.navigate('Scanner', {
                 idParam: idParam, scanEnumParam: ScanEnum.End_Work,
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
@@ -193,7 +193,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 idParam: idParam, scanEnumParam: ScanEnum.End_Break,
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
-                <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
+                <Image style={styles.logo} source={require('./../images/logo-stopbreak.png')} />
               <Text style={styles.textLogo}>Selesai Istirahat</Text>
               </Pressable>
             </View>
