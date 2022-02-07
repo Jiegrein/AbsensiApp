@@ -7,7 +7,6 @@ import { StackParamList } from './StackParams';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScanEnum from '../Enum/ScanEnum';
 import ScannerService from '../services/ScannerService';
-import { format } from "date-fns";
 
 type Props = NativeStackScreenProps<StackParamList, 'Scanner'>;
 

@@ -12,6 +12,8 @@ Build using
 
 Depedencies
 1. expo-camera
+2. Axios
+3. @react-native-async-storage/async-storage 
 
 Git
 1. master branch is protected, make a new branch then pull request to merge
