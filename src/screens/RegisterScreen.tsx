@@ -21,11 +21,12 @@ export default function RegisterScreen() {
 
     const navigation = useNavigation<registerScreenProp>();
 
-    // Store projectId 
+    const [butttonDisable, setButttonDisable] = useState(false);
+    
     const getworkerPhoneIdKey = () => {
         return 'workerPhoneId';
     }
-    // Store Log Id for today    
+    
     const setUserPhoneUuid = async (value: string) => {
         const key = getworkerPhoneIdKey();
         try {
@@ -53,6 +54,7 @@ export default function RegisterScreen() {
 
     const makeNewUuid = () => {
         (async () => {
+            setButttonDisable(true);
             const newId = uuid.v4();
 
             const model: IRegisterWorkerAccount = {
@@ -122,7 +124,7 @@ export default function RegisterScreen() {
                             value={namaLengkap}
                             onChangeText={setNamaLengkap}></TextInput>
 
-                <Pressable style={styles.button} onPress={makeNewUuid}>
+                <Pressable disabled={butttonDisable} style={styles.button} onPressIn={makeNewUuid}>
                     <Text style={styles.text}>Daftar</Text>
                 </Pressable>
             </View>
