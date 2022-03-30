@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, Pressable } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import uuid from 'react-native-uuid';
 import RegisterService from '../services/RegisterService';
 
@@ -21,38 +21,41 @@ export default function RegisterScreen() {
 
     const navigation = useNavigation<registerScreenProp>();
 
-    // Store inital login
-    const storeUserPhoneGuid = async (value: string) => {
+    const [butttonDisable, setButttonDisable] = useState(false);
+    
+    const getworkerPhoneIdKey = () => {
+        return 'workerPhoneId';
+    }
+    
+    const setUserPhoneUuid = async (value: string) => {
+        const key = getworkerPhoneIdKey();
         try {
-            await AsyncStorage.setItem('workerPhoneId', value);
-            //Store uuid ke db sekalian create data di table user
+            await SecureStore.setItemAsync(key, value);
         } catch (e) {
             // saving error
             console.log(e);
         }
     }
-
-    // Get inital login
+    // Get Log Id for today
     const getWorkerPhoneUuid = async () => {
+        const key = getworkerPhoneIdKey();
         try {
-            const value = await AsyncStorage.getItem('workerPhoneId');
+            const value = await SecureStore.getItemAsync(key);
             if (value !== null) {
-                return value
+                return value;
             }
             else {
-                return ''
+                return '';
             }
         } catch (e) {
-            // error reading value
             return '';
         }
     }
 
     const makeNewUuid = () => {
         (async () => {
+            setButttonDisable(true);
             const newId = uuid.v4();
-            // store uuid yg di generate di Async Storage buat simpen validasi next time
-            storeUserPhoneGuid(newId.toString());
 
             const model: IRegisterWorkerAccount = {
                 id: newId.toString(),
@@ -63,6 +66,8 @@ export default function RegisterScreen() {
 
             if (response) {
                 setGuid(newId.toString())
+                // store uuid yg di generate di Secure Storage buat simpen validasi next time
+                setUserPhoneUuid(newId.toString());
             }
         })()
     }
@@ -119,7 +124,7 @@ export default function RegisterScreen() {
                             value={namaLengkap}
                             onChangeText={setNamaLengkap}></TextInput>
 
-                <Pressable style={styles.button} onPress={makeNewUuid}>
+                <Pressable disabled={butttonDisable} style={styles.button} onPressIn={makeNewUuid}>
                     <Text style={styles.text}>Daftar</Text>
                 </Pressable>
             </View>

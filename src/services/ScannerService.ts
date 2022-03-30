@@ -5,6 +5,7 @@ const baseUrl = 'https://absensi-app-web-api.herokuapp.com/api/v1/worker/';
 const ScannerService = {
     createLogId: async (model: LogModel): Promise<NewLogModel> => {
         try {
+            console.log(model);
             const response = await axios.post(baseUrl + 'create-log', model)
             return response.data;
         }

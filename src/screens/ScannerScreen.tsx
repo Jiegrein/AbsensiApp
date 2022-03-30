@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, Alert, TouchableHighlight } from 'react-native';
 import { BarCodeScanningResult, Camera, PermissionStatus } from 'expo-camera';
-import { useIsFocused } from '@react-navigation/native'
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import { StackParamList } from './StackParams';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScanEnum from '../Enum/ScanEnum';
 import ScannerService from '../services/ScannerService';
-import { format } from "date-fns";
 
 type Props = NativeStackScreenProps<StackParamList, 'Scanner'>;
 
@@ -21,30 +20,32 @@ export default function ScannerScreen({ route, navigation }: Props) {
     const isFocused = useIsFocused();
 
     // Store projectId 
-    const getStorageKey = () => {
+    const getLogKey = () => {
         return 'LogId';
     }
-    // Store Log Id for today
-    const storeLogId = async (logId: string) => {
-        const key = getStorageKey();
+    // Store Log Id for today    
+    const storeLogId = async (value: string) => {
+        const key = getLogKey();
         try {
-            await AsyncStorage.setItem(key, logId)
+            await SecureStore.setItemAsync(key, value);
         } catch (e) {
             // saving error
         }
     }
     // Get Log Id for today
     const getLogId = async () => {
-        const key = getStorageKey();
+        const key = getLogKey();
         try {
-            const value = await AsyncStorage.getItem(key)
+            const value = await SecureStore.getItemAsync(key);
             if (value !== null) {
                 return value;
+            }
+            else {
+                return '';
             }
         } catch (e) {
             return '';
         }
-        return '';
     }
 
     // Store ProjectId 
@@ -52,10 +53,10 @@ export default function ScannerScreen({ route, navigation }: Props) {
         return 'ProjectId';
     }
     // Store Project Id for today
-    const storeProjectId = async (projectId: string) => {
+    const storeProjectId = async (value: string) => {
         const key = getProjectKey();
         try {
-            await AsyncStorage.setItem(key, projectId)
+            await SecureStore.setItemAsync(key, value);
         } catch (e) {
             // saving error
         }
@@ -64,16 +65,18 @@ export default function ScannerScreen({ route, navigation }: Props) {
     const getProjectId = async () => {
         const key = getProjectKey();
         try {
-            const value = await AsyncStorage.getItem(key)
+            const value = await SecureStore.getItemAsync(key);
             if (value !== null) {
                 return value;
+            }
+            else {
+                return '';
             }
         } catch (e) {
             return '';
         }
-        return '';
     }
-
+    
     // What happens when we scan the bar code and decide which one runs
     const handleBarCodeScanned = async (result: BarCodeScanningResult) => {
         setScanned(true);

@@ -106,7 +106,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-              <Text style={styles.textLogo}>Mulai Bekerja</Text>
+                <Text style={styles.textLogo}>Mulai Bekerja</Text>
               </Pressable>
             </View>
 
@@ -116,7 +116,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
-              <Text style={styles.textLogo}>Selesai Bekerja</Text>
+                <Text style={styles.textLogo}>Selesai Bekerja</Text>
               </Pressable>
             </View>
           </View>
@@ -128,7 +128,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
-              <Text style={styles.textLogo}>Mulai Istirahat</Text>
+                <Text style={styles.textLogo}>Mulai Istirahat</Text>
               </Pressable>
             </View>
 
@@ -138,7 +138,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-stopbreak.png')} />
-              <Text style={styles.textLogo}>Selesai Istirahat</Text>
+                <Text style={styles.textLogo}>Selesai Istirahat</Text>
               </Pressable>
             </View>
           </View>
@@ -162,7 +162,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-startwork.png')} />
-              <Text style={styles.textLogo}>Mulai Bekerja</Text>
+                <Text style={styles.textLogo}>Mulai Bekerja</Text>
               </Pressable>
             </View>
 
@@ -172,7 +172,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-stopwork.png')} />
-              <Text style={styles.textLogo}>Selesai Bekerja</Text>
+                <Text style={styles.textLogo}>Selesai Bekerja</Text>
               </Pressable>
             </View>
           </View>
@@ -184,7 +184,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-startbreak.png')} />
-              <Text style={styles.textLogo}>Mulai Istirahat</Text>
+                <Text style={styles.textLogo}>Mulai Istirahat</Text>
               </Pressable>
             </View>
 
@@ -194,7 +194,7 @@ export default function HomeScreen({ route, navigation }: Props) {
                 workStatusParam: workStatus, breakStatusParam: breakStatus
               })} style={styles.press}>
                 <Image style={styles.logo} source={require('./../images/logo-stopbreak.png')} />
-              <Text style={styles.textLogo}>Selesai Istirahat</Text>
+                <Text style={styles.textLogo}>Selesai Istirahat</Text>
               </Pressable>
             </View>
           </View>
