@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-const baseUrl = 'https://absensi-app-web-api.herokuapp.com/api/v1/worker/';
+const baseUrl = 'https://absensiappwebapi.azurewebsites.net/api/v1/worker/';
 
 const ScannerService = {
     createLogId: async (model: LogModel): Promise<NewLogModel> => {
