@@ -90,7 +90,14 @@ export default function ScannerScreen({ route, navigation }: Props) {
         if (scanEnumParam === ScanEnum.Start_Work) {
             let success = await handleStartWorkingScan(model)
             if (success) {
-                navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+                Alert.alert('Mulai Kerja', 'SELAMAT BEKERJA! - WORKING!',
+                    [
+                        {
+                            text: "Return",
+                            onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false }),
+                            style: "cancel"
+                        }
+                    ])
             }
             else {
                 navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
@@ -127,13 +134,34 @@ export default function ScannerScreen({ route, navigation }: Props) {
                     console.log(response);
                     if (response) {
                         if (scanEnumParam === ScanEnum.Start_Break) {
-                            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: true });
+                            Alert.alert('Mulai Istirahat', 'ISTIRAHAT - HAVE A GOOD LUNCH',
+                            [
+                                {
+                                    text: "Return",
+                                    onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: true }),
+                                    style: "cancel"
+                                }
+                            ])
                         }
                         else if (scanEnumParam === ScanEnum.End_Break) {
-                            navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false });
+                            Alert.alert('Mulai Bekerja Kembali', 'BEKERJA KEMBALI - BACK TO WORK',
+                            [
+                                {
+                                    text: "Return",
+                                    onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: true, breakStatusParam: false }),
+                                    style: "cancel"
+                                }
+                            ])
                         }
                         else {
-                            navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false });
+                            Alert.alert('Selesai Bekerja', 'SELESAI BEKERJA DENGAN BAIK - GOOD NIGHT',
+                            [
+                                {
+                                    text: "Return",
+                                    onPress: () => navigation.navigate('Home', { idParam: idParam, workStatusParam: false, breakStatusParam: false }),
+                                    style: "cancel"
+                                }
+                            ])
                         }
                     }
                     else {
