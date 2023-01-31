@@ -1,7 +1,7 @@
 interface IRegisterWorkerAccount{
     id: string;
     fullname: string;
-    name: string;
+    phone: string;
 };
 
 declare const IModel: IRegisterWorkerAccount;

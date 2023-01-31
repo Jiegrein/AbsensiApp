@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const baseUrl = 'https://absensiappwebapi.azurewebsites.net/api/v1/worker/';
+// const baseUrl = 'https://absensiappwebapi.azurewebsites.net/api/v1/worker/';
+const baseUrl = 'https://localhost:5001/api/v1/worker/';
 
 const RegisterService = {
     getWorkerPhoneId: async (phoneId: string): Promise<IWorker> => {

@@ -16,7 +16,7 @@ export default function RegisterScreen() {
     const [guid, setGuid] = useState('');
     const [needRegister, setNeedRegister] = useState(false);
 
-    const [nama, setNama] = useState('');
+    const [phone, setPhone] = useState('');
     const [namaLengkap, setNamaLengkap] = useState('');
 
     const navigation = useNavigation<registerScreenProp>();
@@ -59,8 +59,8 @@ export default function RegisterScreen() {
 
             const model: IRegisterWorkerAccount = {
                 id: newId.toString(),
-                name: nama,
-                fullname: namaLengkap
+                fullname: namaLengkap,
+                phone: phone
             };
             let response = await RegisterService.postWorkerId(model);
 
@@ -115,9 +115,9 @@ export default function RegisterScreen() {
                 <Text style={styles.text}>Silahkan daftar terlebih dahulu</Text>
 
                 <TextInput  style={styles.textInput}
-                            placeholder='Nama'
-                            value={nama}
-                            onChangeText={setNama}></TextInput>
+                            placeholder='Nomor HP'
+                            value={phone}
+                            onChangeText={setPhone}></TextInput>
 
                 <TextInput  style={styles.textInput}
                             placeholder='Nama Lengkap'
