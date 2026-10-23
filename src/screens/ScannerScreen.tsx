@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, Alert, TouchableHighlight } from 'react-native';
-import { BarCodeScanningResult, Camera, PermissionStatus } from 'expo-camera';
+import { BarcodeScanningResult, Camera, CameraView, PermissionStatus } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { StackParamList } from './StackParams';
@@ -14,7 +14,6 @@ export default function ScannerScreen({ route, navigation }: Props) {
     const { idParam, scanEnumParam, workStatusParam, breakStatusParam } = route.params;
 
     const [hasPermission, setHasPermission] = useState(Boolean);
-    const [type, setType] = useState(Camera.Constants.Type.back);
     const [scanned, setScanned] = useState(false);
 
     const isFocused = useIsFocused();
@@ -78,7 +77,7 @@ export default function ScannerScreen({ route, navigation }: Props) {
     }
     
     // What happens when we scan the bar code and decide which one runs
-    const handleBarCodeScanned = async (result: BarCodeScanningResult) => {
+    const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
         setScanned(true);
 
         const model: LogModel = {
@@ -237,8 +236,11 @@ export default function ScannerScreen({ route, navigation }: Props) {
         return (
             <View style={styles.container}>
                 <View style={styles.barcodebox}>
-                    <Camera style={{ height: 500, width: 400 }} type={type} onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}>
-                    </Camera>
+                    <CameraView
+                        style={{ height: 500, width: 400 }}
+                        facing="back"
+                        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    />
                 </View>
             </View>
         );

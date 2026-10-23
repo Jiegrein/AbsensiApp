@@ -4,8 +4,8 @@
  * backend answers, which Alert is shown and what status Home is sent back with.
  *
  * The camera is mocked at the expo-camera boundary; the scan is driven by invoking the
- * callback the screen hands to <Camera>. The camera API is the part the Expo upgrade will
- * rewrite, so only this mock should change in that upgrade, never the assertions below.
+ * callback the screen hands to <CameraView>. The Expo 58 upgrade changed only this mock
+ * (Camera/onBarCodeScanned became CameraView/onBarcodeScanned); the assertions are unchanged.
  */
 import React from 'react';
 import { Alert } from 'react-native';
@@ -21,13 +21,12 @@ const mockScan: { callback?: ScanCallback } = {};
 jest.mock('expo-camera', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const Camera = (props: { onBarCodeScanned?: ScanCallback }) => {
-    mockScan.callback = props.onBarCodeScanned;
+  const CameraView = (props: { onBarcodeScanned?: ScanCallback }) => {
+    mockScan.callback = props.onBarcodeScanned;
     return React.createElement(View, { testID: 'camera' });
   };
-  Camera.Constants = { Type: { back: 'back', front: 'front' } };
-  Camera.requestCameraPermissionsAsync = jest.fn(async () => ({ status: 'granted' }));
-  return { Camera, PermissionStatus: { GRANTED: 'granted', DENIED: 'denied' } };
+  const Camera = { requestCameraPermissionsAsync: jest.fn(async () => ({ status: 'granted' })) };
+  return { Camera, CameraView, PermissionStatus: { GRANTED: 'granted', DENIED: 'denied' } };
 });
 
 jest.mock('expo-secure-store', () => require('./testUtils/secureStoreMock').createSecureStoreMock());
@@ -77,7 +76,7 @@ beforeEach(() => {
 describe('start work', () => {
   it('creates a log, stores logId and projectId, and returns Home as working', async () => {
     mockedService.createLogId.mockResolvedValueOnce({ logId: 'log-1', projectId: PROJECT, message: '' });
-    renderScanner(ScanEnum.Start_Work);
+    await renderScanner(ScanEnum.Start_Work);
 
     await scan(PROJECT);
 
@@ -91,7 +90,7 @@ describe('start work', () => {
 
   it('shows the backend message when the log is rejected and stores nothing', async () => {
     mockedService.createLogId.mockResolvedValueOnce({ logId: '', projectId: '', message: 'Sudah scan hari ini' });
-    renderScanner(ScanEnum.Start_Work, false, false);
+    await renderScanner(ScanEnum.Start_Work, false, false);
 
     await scan(PROJECT);
 
@@ -105,7 +104,7 @@ describe('start work', () => {
   it('throws when the service returns undefined (request never sent)', async () => {
     // KNOWN BUG: see services test; `undefined.logId` is dereferenced.
     mockedService.createLogId.mockResolvedValueOnce(undefined as any);
-    renderScanner(ScanEnum.Start_Work);
+    await renderScanner(ScanEnum.Start_Work);
 
     await waitFor(() => expect(mockScan.callback).toBeDefined());
     await expect(mockScan.callback!({ type: 'qr', data: PROJECT })).rejects.toThrow(TypeError);
@@ -119,7 +118,7 @@ describe('scans after start work', () => {
   };
 
   it('refuses any non-start scan when no log is stored', async () => {
-    renderScanner(ScanEnum.End_Work, true, false);
+    await renderScanner(ScanEnum.End_Work, true, false);
 
     await scan(PROJECT);
 
@@ -131,7 +130,7 @@ describe('scans after start work', () => {
 
   it('refuses a QR for a different project than the morning scan', async () => {
     seedMorning();
-    renderScanner(ScanEnum.Start_Break, true, false);
+    await renderScanner(ScanEnum.Start_Break, true, false);
 
     await scan('some-other-project');
 
@@ -148,7 +147,7 @@ describe('scans after start work', () => {
   ])('scan %i updates the stored log and returns Home with the new status', async (scanEnum, title, message, work, brk) => {
     seedMorning();
     mockedService.updateLogId.mockResolvedValueOnce(true);
-    renderScanner(scanEnum, true, scanEnum === ScanEnum.End_Break);
+    await renderScanner(scanEnum, true, scanEnum === ScanEnum.End_Break);
 
     await scan(PROJECT);
 
@@ -161,7 +160,7 @@ describe('scans after start work', () => {
   it('reports "Lapor ke bos" when the update fails and keeps the current status', async () => {
     seedMorning();
     mockedService.updateLogId.mockResolvedValueOnce(false);
-    renderScanner(ScanEnum.End_Work, true, false);
+    await renderScanner(ScanEnum.End_Work, true, false);
 
     await scan(PROJECT);
 
@@ -173,10 +172,10 @@ describe('scans after start work', () => {
   it('ignores a second scan while the first is being handled', async () => {
     seedMorning();
     mockedService.updateLogId.mockResolvedValue(true);
-    const screen = renderScanner(ScanEnum.End_Work, true, false);
+    const screen = await renderScanner(ScanEnum.End_Work, true, false);
 
     await scan(PROJECT);
-    screen.rerender(
+    await screen.rerender(
       <ScannerScreen
         route={{ params: { idParam: 'w-1', scanEnumParam: ScanEnum.End_Work, workStatusParam: true, breakStatusParam: false } } as any}
         navigation={navigation as any}
@@ -190,7 +189,7 @@ describe('scans after start work', () => {
 describe('camera permission', () => {
   it('asks for permission on mount and shows the camera once granted', async () => {
     const { Camera } = require('expo-camera');
-    const screen = renderScanner(ScanEnum.Start_Work);
+    const screen = await renderScanner(ScanEnum.Start_Work);
 
     await waitFor(() => expect(screen.getByTestId('camera')).toBeTruthy());
     expect(Camera.requestCameraPermissionsAsync).toHaveBeenCalledTimes(1);
@@ -199,7 +198,7 @@ describe('camera permission', () => {
   it('shows the allow-camera prompt when permission is denied', async () => {
     const { Camera } = require('expo-camera');
     Camera.requestCameraPermissionsAsync.mockResolvedValueOnce({ status: 'denied' });
-    const screen = renderScanner(ScanEnum.Start_Work);
+    const screen = await renderScanner(ScanEnum.Start_Work);
 
     await waitFor(() => expect(screen.getByText('Berikan app akses ke kamera')).toBeTruthy());
     expect(screen.queryByTestId('camera')).toBeNull();
