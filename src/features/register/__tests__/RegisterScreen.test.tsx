@@ -1,16 +1,17 @@
 /**
- * Characterization tests (playbook R2) for RegisterScreen: first-launch registration and
- * the returning-user auto-login driven by the uuid kept in SecureStore.
+ * RegisterScreen: first-launch registration by phone, returning-user auto-login with the stored
+ * token, and the fallbacks that send a phone back to the form.
  */
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import RegisterScreen from '../RegisterScreen';
 import { registerApi } from '../registerApi';
-import { Worker } from '../types';
+import { RegisteredWorker, Worker } from '../types';
 import { createSecureStoreMock } from '../../../shared/testing/secureStoreMock';
 
 jest.mock('expo-secure-store', () => require('../../../shared/testing/secureStoreMock').createSecureStoreMock());
 const mockSecureStore = jest.requireMock('expo-secure-store') as ReturnType<typeof createSecureStoreMock>;
+jest.mock('../../../shared/api', () => ({ api: {}, workerApiBaseUrl: 'https://api.test/api/v1/worker/' }));
 jest.mock('react-native-uuid', () => ({ v4: () => 'generated-uuid' }));
 jest.mock('../registerApi');
 
@@ -29,76 +30,89 @@ const knownWorker: Worker = {
   updatedAt: new Date('2026-01-02'),
 };
 
+const seedSession = () => {
+  mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
+  mockSecureStore.store.set('jwtToken', 'stored-token');
+};
+
+const homeParams = (worker: Worker) => ({ idParam: worker.id, workStatusParam: worker.workStatus, breakStatusParam: worker.breakStatus });
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSecureStore.store.clear();
-  jest.spyOn(console, 'log').mockImplementation(() => undefined);
 });
 
 describe('first launch (nothing stored)', () => {
-  it('shows the registration form and does not call the backend', async () => {
+  it('shows the phone and name form and does not call the backend', async () => {
     const screen = await render(<RegisterScreen />);
 
     await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
-    expect(screen.getByPlaceholderText('Nama')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Nomor HP')).toBeTruthy();
     expect(screen.getByPlaceholderText('Nama Lengkap')).toBeTruthy();
     expect(mockedApi.getWorker).not.toHaveBeenCalled();
     expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 
-  it('"Daftar" posts a new uuid with the typed names and stores the uuid', async () => {
-    mockedApi.createWorker.mockResolvedValueOnce(true);
-    // Once the uuid is stored the mount effect re-runs and looks the new worker up.
-    mockedApi.getWorker.mockResolvedValue({ ...knownWorker, id: 'generated-uuid' });
+  it('"Daftar" registers the phone, stores the returned id and token, and opens Home', async () => {
+    const registered: RegisteredWorker = { ...knownWorker, id: 'server-id', phone: '08123456789', token: 'new-token' };
+    mockedApi.createWorker.mockResolvedValueOnce(registered);
     const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
-    await fireEvent.changeText(screen.getByPlaceholderText('Nama'), 'Yanto');
+    await fireEvent.changeText(screen.getByPlaceholderText('Nomor HP'), '08123456789');
     await fireEvent.changeText(screen.getByPlaceholderText('Nama Lengkap'), 'Heriyanto');
-    await fireEvent(screen.getByText('Daftar'), 'pressIn');
+    await fireEvent.press(screen.getByText('Daftar'));
 
-    await waitFor(() => expect(mockSecureStore.store.get('workerPhoneId')).toBe('generated-uuid'));
-    expect(mockedApi.createWorker).toHaveBeenCalledWith({ id: 'generated-uuid', name: 'Yanto', fullname: 'Heriyanto' });
+    await waitFor(() => expect(mockNavigation.replace).toHaveBeenCalledWith('Home', homeParams(registered)));
+    expect(mockedApi.createWorker).toHaveBeenCalledWith({ id: 'generated-uuid', fullname: 'Heriyanto', phone: '08123456789' });
+    // The server's id wins: a known phone returns the existing worker, not the generated uuid.
+    expect(mockSecureStore.store.get('workerPhoneId')).toBe('server-id');
+    expect(mockSecureStore.store.get('jwtToken')).toBe('new-token');
   });
 
-  it('stores nothing when registration is rejected', async () => {
-    mockedApi.createWorker.mockResolvedValueOnce(false);
+  it('shows an error and lets the user retry when registration is rejected', async () => {
+    mockedApi.createWorker.mockResolvedValueOnce(null);
     const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
-    await fireEvent(screen.getByText('Daftar'), 'pressIn');
+    await fireEvent.press(screen.getByText('Daftar'));
 
-    await waitFor(() => expect(mockedApi.createWorker).toHaveBeenCalled());
-    expect(mockSecureStore.store.has('workerPhoneId')).toBe(false);
+    await waitFor(() => expect(screen.getByText(/Pendaftaran gagal/)).toBeTruthy());
+    expect(mockSecureStore.store.size).toBe(0);
+    expect(screen.getByText('Daftar').parent!.props.accessibilityState?.disabled).not.toBe(true);
   });
 });
 
-describe('returning user (uuid stored)', () => {
-  it('looks the worker up by the stored uuid and replaces the stack with Home', async () => {
-    mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
+describe('returning user', () => {
+  it('with an id and token stored, looks the worker up and replaces the stack with Home', async () => {
+    seedSession();
     mockedApi.getWorker.mockResolvedValue(knownWorker);
 
     await render(<RegisterScreen />);
 
-    await waitFor(() =>
-      expect(mockNavigation.replace).toHaveBeenCalledWith('Home', {
-        idParam: 'stored-uuid',
-        workStatusParam: true,
-        breakStatusParam: false,
-      })
-    );
+    await waitFor(() => expect(mockNavigation.replace).toHaveBeenCalledWith('Home', homeParams(knownWorker)));
     expect(mockedApi.getWorker).toHaveBeenCalledWith('stored-uuid');
   });
 
-  it('shows the registration form again when the backend does not know the uuid', async () => {
-    // Pinned as-is: the stale uuid stays in SecureStore; registering again overwrites it.
+  it('with an id but no token (pre-token install) goes to the form without calling the backend', async () => {
     mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
-    mockedApi.getWorker.mockResolvedValue({ ...knownWorker, id: '' });
+
+    const screen = await render(<RegisterScreen />);
+
+    await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
+    expect(mockedApi.getWorker).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['the backend does not know the id', () => mockedApi.getWorker.mockResolvedValue(null)],
+    ['the stored token is rejected', () => mockedApi.getWorker.mockRejectedValue(new Error('401'))],
+  ])('shows the form again when %s', async (_label, arrange) => {
+    seedSession();
+    arrange();
 
     const screen = await render(<RegisterScreen />);
 
     await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
     expect(mockNavigation.replace).not.toHaveBeenCalled();
-    expect(mockSecureStore.store.get('workerPhoneId')).toBe('stored-uuid');
   });
 });

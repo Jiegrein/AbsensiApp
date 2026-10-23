@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 // Key strings are part of the installed app's state; renaming one logs every existing phone out.
 export const StorageKey = {
   workerId: 'workerPhoneId',
+  token: 'jwtToken',
   logId: 'LogId',
   projectId: 'ProjectId',
 } as const;

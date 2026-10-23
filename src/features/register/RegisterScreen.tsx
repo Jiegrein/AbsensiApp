@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import uuid from 'react-native-uuid';
@@ -14,37 +13,50 @@ type Navigation = NativeStackNavigationProp<StackParamList, 'Register'>;
 export default function RegisterScreen() {
   const navigation = useNavigation<Navigation>();
   const [showForm, setShowForm] = useState(false);
-  const [nama, setNama] = useState('');
-  const [namaLengkap, setNamaLengkap] = useState('');
+  const [phone, setPhone] = useState('');
+  const [fullname, setFullname] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const openHome = (worker: Worker) =>
     navigation.replace('Home', { idParam: worker.id, workStatusParam: worker.workStatus, breakStatusParam: worker.breakStatus });
 
-  /** A phone that registered before goes straight to Home; anything else shows the form. */
+  /**
+   * A phone that registered before has an id and a token stored and goes straight to Home.
+   * Anything else, including a token the backend no longer accepts, shows the form; registering
+   * again with the same phone number returns the same worker with a fresh token.
+   */
   const resumeSession = async () => {
     const storedId = await readStored(StorageKey.workerId);
-    if (storedId === '') {
+    const storedToken = await readStored(StorageKey.token);
+    if (storedId === '' || storedToken === '') {
       setShowForm(true);
       return;
     }
-    const worker = await registerApi.getWorker(storedId);
-    if (worker.id === storedId) {
-      openHome(worker);
-    } else {
-      setShowForm(true);
+    try {
+      const worker = await registerApi.getWorker(storedId);
+      if (worker?.id === storedId) {
+        openHome(worker);
+        return;
+      }
+    } catch {
+      // fall through to the form
     }
+    setShowForm(true);
   };
 
-  // The button stays disabled after a failed attempt; re-enabling it is a separate, deliberate change.
   const register = async () => {
     setSubmitting(true);
-    const id = uuid.v4().toString();
-    const created = await registerApi.createWorker({ id, name: nama, fullname: namaLengkap });
-    if (created) {
-      await writeStored(StorageKey.workerId, id);
-      await resumeSession();
+    setError('');
+    const registered = await registerApi.createWorker({ id: uuid.v4().toString(), fullname, phone });
+    if (!registered) {
+      setError('Pendaftaran gagal. Periksa nomor HP dan koneksi, lalu coba lagi.');
+      setSubmitting(false);
+      return;
     }
+    await writeStored(StorageKey.workerId, registered.id);
+    await writeStored(StorageKey.token, registered.token);
+    openHome(registered);
   };
 
   useEffect(() => {
@@ -58,11 +70,25 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Silahkan daftar terlebih dahulu</Text>
-      <TextInput style={styles.textInput} placeholder="Nama" value={nama} onChangeText={setNama} />
-      <TextInput style={styles.textInput} placeholder="Nama Lengkap" value={namaLengkap} onChangeText={setNamaLengkap} />
-      <Pressable disabled={submitting} style={styles.button} onPressIn={register}>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Nomor HP"
+        placeholderTextColor="#b9b3a7"
+        keyboardType="number-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+      <TextInput
+        style={styles.textInput}
+        placeholder="Nama Lengkap"
+        placeholderTextColor="#b9b3a7"
+        value={fullname}
+        onChangeText={setFullname}
+      />
+      <Pressable disabled={submitting} style={styles.button} onPress={register}>
         <Text style={styles.text}>Daftar</Text>
       </Pressable>
+      {error !== '' && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -77,6 +103,11 @@ const styles = StyleSheet.create({
   text: {
     color: '#fff',
     margin: 12,
+  },
+  error: {
+    color: '#e08b80',
+    marginHorizontal: 35,
+    textAlign: 'center',
   },
   textInput: {
     color: '#fff',

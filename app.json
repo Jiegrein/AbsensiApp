@@ -2,7 +2,7 @@
   "expo": {
     "name": "AbsensiApp",
     "slug": "AbsensiApp",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -29,7 +29,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.jegrein.AbsensiApp",
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,7 +46,8 @@
     "extra": {
       "eas": {
         "projectId": "abe43a18-2dd6-4c0e-a60f-faada911c5fb"
-      }
+      },
+      "apiBaseUrl": "https://absensiappapi-end4gcb4e9hbexez.southeastasia-01.azurewebsites.net/api/v1/worker/"
     },
     "owner": "jiegrein"
   }

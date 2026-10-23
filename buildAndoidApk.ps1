@@ -1,1 +1,1 @@
-eas build -p android --profile phonetest
+eas build -p android --profile production

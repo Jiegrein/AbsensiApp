@@ -32,6 +32,7 @@ jest.mock('expo-camera', () => {
 jest.mock('expo-secure-store', () => require('../../../shared/testing/secureStoreMock').createSecureStoreMock());
 const mockSecureStore = jest.requireMock('expo-secure-store') as ReturnType<typeof createSecureStoreMock>;
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
+jest.mock('../../../shared/api', () => ({ api: {}, workerApiBaseUrl: 'https://api.test/api/v1/worker/' }));
 jest.mock('../attendanceApi');
 
 const mockedApi = attendanceApi as jest.Mocked<typeof attendanceApi>;
