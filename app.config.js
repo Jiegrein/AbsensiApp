@@ -1,9 +1,11 @@
 // Dynamic app config: everything static lives below; the backend host comes from the
 // environment so no hostname is committed. EAS injects API_BASE_URL from the project's
 // environment variables at build time; for `expo start` put it in a local .env file.
+// Left undefined rather than throwing so tooling (eas-cli, `expo config`) can read the config
+// without the variable; the app itself refuses to start without it (see src/shared/api.ts).
 const apiBaseUrl = process.env.API_BASE_URL;
 if (!apiBaseUrl) {
-  throw new Error('API_BASE_URL is not set. Add it to .env (see .env.example) or to the EAS project environment variables.');
+  console.warn('API_BASE_URL is not set; set it in .env or in the EAS project environment variables.');
 }
 
 const config = {
