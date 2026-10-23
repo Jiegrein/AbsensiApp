@@ -17,7 +17,7 @@ const config = {
   "splash": {
     "image": "./assets/splash.png",
     "resizeMode": "contain",
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#121212"
   },
   "updates": {
     "fallbackToCacheTimeout": 0
@@ -57,7 +57,17 @@ const config = {
       "projectId": "abe43a18-2dd6-4c0e-a60f-faada911c5fb"
     }
   },
-  "owner": "jiegrein"
+  "owner": "jiegrein",
+  "backgroundColor": "#121212",
+  "userInterfaceStyle": "dark",
+  "androidStatusBar": {
+    "backgroundColor": "#121212",
+    "barStyle": "light-content"
+  },
+  "androidNavigationBar": {
+    "backgroundColor": "#121212",
+    "barStyle": "light-content"
+  }
 };
 
 config.extra.apiBaseUrl = apiBaseUrl;

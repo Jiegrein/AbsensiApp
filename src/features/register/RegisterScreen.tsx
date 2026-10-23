@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import uuid from 'react-native-uuid';
@@ -64,7 +64,12 @@ export default function RegisterScreen() {
   }, []);
 
   if (!showForm) {
-    return <View style={styles.container} />;
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3399FF" />
+        <Text style={styles.text}>Memeriksa sesi...</Text>
+      </View>
+    );
   }
 
   return (
