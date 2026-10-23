@@ -15,7 +15,7 @@ const ScannerService = {
                 // console.log('response');
                 // console.log(err.response.status);
                 // console.log(err.response.data);
-                return err.response.data;
+                return err.response.data as NewLogModel;
             }
             else if (err.request) {
                 // console.log('request');

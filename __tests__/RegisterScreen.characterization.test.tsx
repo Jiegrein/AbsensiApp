@@ -36,7 +36,7 @@ beforeEach(() => {
 
 describe('first launch (nothing stored)', () => {
   it('shows the registration form and does not call the backend', async () => {
-    const screen = render(<RegisterScreen />);
+    const screen = await render(<RegisterScreen />);
 
     await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
     expect(screen.getByPlaceholderText('Nama')).toBeTruthy();
@@ -47,12 +47,14 @@ describe('first launch (nothing stored)', () => {
 
   it('"Daftar" posts a new uuid with the typed names and stores the uuid', async () => {
     mockedService.postWorkerId.mockResolvedValueOnce(true);
-    const screen = render(<RegisterScreen />);
+    // Once the uuid is stored the mount effect re-runs and looks the new worker up.
+    mockedService.getWorkerPhoneId.mockResolvedValue({ ...knownWorker, id: 'generated-uuid' });
+    const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
-    fireEvent.changeText(screen.getByPlaceholderText('Nama'), 'Yanto');
-    fireEvent.changeText(screen.getByPlaceholderText('Nama Lengkap'), 'Heriyanto');
-    fireEvent(screen.getByText('Daftar'), 'pressIn');
+    await fireEvent.changeText(screen.getByPlaceholderText('Nama'), 'Yanto');
+    await fireEvent.changeText(screen.getByPlaceholderText('Nama Lengkap'), 'Heriyanto');
+    await fireEvent(screen.getByText('Daftar'), 'pressIn');
 
     await waitFor(() => expect(mockSecureStore.store.get('workerPhoneId')).toBe('generated-uuid'));
     expect(mockedService.postWorkerId).toHaveBeenCalledWith({ id: 'generated-uuid', name: 'Yanto', fullname: 'Heriyanto' });
@@ -60,10 +62,10 @@ describe('first launch (nothing stored)', () => {
 
   it('stores nothing when registration is rejected', async () => {
     mockedService.postWorkerId.mockResolvedValueOnce(false);
-    const screen = render(<RegisterScreen />);
+    const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
-    fireEvent(screen.getByText('Daftar'), 'pressIn');
+    await fireEvent(screen.getByText('Daftar'), 'pressIn');
 
     await waitFor(() => expect(mockedService.postWorkerId).toHaveBeenCalled());
     expect(mockSecureStore.store.has('workerPhoneId')).toBe(false);
@@ -75,7 +77,7 @@ describe('returning user (uuid stored)', () => {
     mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
     mockedService.getWorkerPhoneId.mockResolvedValue(knownWorker);
 
-    render(<RegisterScreen />);
+    await render(<RegisterScreen />);
 
     await waitFor(() =>
       expect(mockNavigation.replace).toHaveBeenCalledWith('Home', {
@@ -92,7 +94,7 @@ describe('returning user (uuid stored)', () => {
     mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
     mockedService.getWorkerPhoneId.mockResolvedValue({ ...knownWorker, id: '' });
 
-    const screen = render(<RegisterScreen />);
+    const screen = await render(<RegisterScreen />);
 
     await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
     expect(mockNavigation.replace).not.toHaveBeenCalled();

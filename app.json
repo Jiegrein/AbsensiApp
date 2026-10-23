@@ -23,13 +23,22 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      },      
+      },
       "permissions": [],
       "package": "com.jegrein.AbsensiApp",
       "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }    
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Aplikasi membutuhkan kamera untuk memindai QR proyek."
+        }
+      ],
+      "expo-secure-store"
+    ]
   }
 }

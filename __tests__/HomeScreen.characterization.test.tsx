@@ -4,7 +4,6 @@
  * passes to the Scanner screen.
  */
 import React from 'react';
-import { Pressable, Text } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import HomeScreen from '../src/screens/HomeScreen';
 import ScanEnum from '../src/Enum/ScanEnum';
@@ -21,18 +20,20 @@ const renderHome = (workStatus: boolean, breakStatus: boolean) =>
     />
   );
 
-/** Reads each action's label and whether it is tappable. */
-const actionTable = (screen: ReturnType<typeof render>) =>
-  screen.UNSAFE_getAllByType(Pressable).map((pressable) => {
-    const label = pressable.findAllByType(Text)[0].props.children as string;
-    return [label, pressable.props.disabled === true ? 'disabled' : 'enabled'] as const;
+const ACTIONS = ['Mulai Bekerja', 'Selesai Bekerja', 'Mulai Istirahat', 'Selesai Istirahat'];
+
+/** Reads each action's label and whether it is tappable (Pressable exposes `disabled` via accessibilityState). */
+const actionTable = (screen: Awaited<ReturnType<typeof render>>) =>
+  ACTIONS.map((label) => {
+    const pressable = screen.getByText(label).parent!;
+    return [label, pressable.props.accessibilityState?.disabled === true ? 'disabled' : 'enabled'] as const;
   });
 
 beforeEach(() => navigation.navigate.mockClear());
 
 describe('actions available per state', () => {
-  it('not working: only "Mulai Bekerja" is enabled', () => {
-    const screen = renderHome(false, false);
+  it('not working: only "Mulai Bekerja" is enabled', async () => {
+    const screen = await renderHome(false, false);
     expect(actionTable(screen)).toEqual([
       ['Mulai Bekerja', 'enabled'],
       ['Selesai Bekerja', 'disabled'],
@@ -42,8 +43,8 @@ describe('actions available per state', () => {
     expect(screen.getByText('Tidak Bekerja')).toBeTruthy();
   });
 
-  it('working: "Selesai Bekerja" and "Mulai Istirahat" are enabled', () => {
-    const screen = renderHome(true, false);
+  it('working: "Selesai Bekerja" and "Mulai Istirahat" are enabled', async () => {
+    const screen = await renderHome(true, false);
     expect(actionTable(screen)).toEqual([
       ['Mulai Bekerja', 'disabled'],
       ['Selesai Bekerja', 'enabled'],
@@ -53,8 +54,8 @@ describe('actions available per state', () => {
     expect(screen.getByText('Sedang Bekerja')).toBeTruthy();
   });
 
-  it('on break: only "Selesai Istirahat" is enabled', () => {
-    const screen = renderHome(true, true);
+  it('on break: only "Selesai Istirahat" is enabled', async () => {
+    const screen = await renderHome(true, true);
     expect(actionTable(screen)).toEqual([
       ['Mulai Bekerja', 'disabled'],
       ['Selesai Bekerja', 'disabled'],
@@ -64,9 +65,9 @@ describe('actions available per state', () => {
     expect(screen.getByText('Sedang Istirahat')).toBeTruthy();
   });
 
-  it('break without work shows the break status and the not-working layout', () => {
+  it('break without work shows the break status and the not-working layout', async () => {
     // Pinned as-is: workStatus=false wins for the layout, breakStatus=true wins for the text.
-    const screen = renderHome(false, true);
+    const screen = await renderHome(false, true);
     expect(actionTable(screen)[0]).toEqual(['Mulai Bekerja', 'enabled']);
     expect(screen.getByText('Sedang Istirahat')).toBeTruthy();
   });
@@ -78,9 +79,9 @@ describe('navigation to Scanner', () => {
     [true, false, 'Selesai Bekerja', ScanEnum.End_Work],
     [true, false, 'Mulai Istirahat', ScanEnum.Start_Break],
     [true, true, 'Selesai Istirahat', ScanEnum.End_Break],
-  ])('work=%s break=%s: "%s" opens Scanner with scanEnum %i and the current status', (work, brk, label, scanEnum) => {
-    const screen = renderHome(work, brk);
-    fireEvent.press(screen.getByText(label));
+  ])('work=%s break=%s: "%s" opens Scanner with scanEnum %i and the current status', async (work, brk, label, scanEnum) => {
+    const screen = await renderHome(work, brk);
+    await fireEvent.press(screen.getByText(label));
     expect(navigation.navigate).toHaveBeenCalledWith('Scanner', {
       idParam: 'w-1',
       scanEnumParam: scanEnum,
