@@ -5,8 +5,8 @@
  */
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import HomeScreen from '../src/screens/HomeScreen';
-import ScanEnum from '../src/Enum/ScanEnum';
+import HomeScreen from '../HomeScreen';
+import { ScanEnum } from '../types';
 
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 

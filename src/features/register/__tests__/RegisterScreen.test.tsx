@@ -4,21 +4,22 @@
  */
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import RegisterScreen from '../src/screens/RegisterScreen';
-import RegisterService from '../src/services/RegisterService';
-import { createSecureStoreMock } from './testUtils/secureStoreMock';
+import RegisterScreen from '../RegisterScreen';
+import { registerApi } from '../registerApi';
+import { Worker } from '../types';
+import { createSecureStoreMock } from '../../../shared/testing/secureStoreMock';
 
-jest.mock('expo-secure-store', () => require('./testUtils/secureStoreMock').createSecureStoreMock());
+jest.mock('expo-secure-store', () => require('../../../shared/testing/secureStoreMock').createSecureStoreMock());
 const mockSecureStore = jest.requireMock('expo-secure-store') as ReturnType<typeof createSecureStoreMock>;
 jest.mock('react-native-uuid', () => ({ v4: () => 'generated-uuid' }));
-jest.mock('../src/services/RegisterService');
+jest.mock('../registerApi');
 
 const mockNavigation = { replace: jest.fn() };
 jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNavigation }));
 
-const mockedService = RegisterService as jest.Mocked<typeof RegisterService>;
+const mockedApi = registerApi as jest.Mocked<typeof registerApi>;
 
-const knownWorker: IWorker = {
+const knownWorker: Worker = {
   id: 'stored-uuid',
   fullname: 'Heriyanto',
   name: 'Yanto',
@@ -41,14 +42,14 @@ describe('first launch (nothing stored)', () => {
     await waitFor(() => expect(screen.getByText('Silahkan daftar terlebih dahulu')).toBeTruthy());
     expect(screen.getByPlaceholderText('Nama')).toBeTruthy();
     expect(screen.getByPlaceholderText('Nama Lengkap')).toBeTruthy();
-    expect(mockedService.getWorkerPhoneId).not.toHaveBeenCalled();
+    expect(mockedApi.getWorker).not.toHaveBeenCalled();
     expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 
   it('"Daftar" posts a new uuid with the typed names and stores the uuid', async () => {
-    mockedService.postWorkerId.mockResolvedValueOnce(true);
+    mockedApi.createWorker.mockResolvedValueOnce(true);
     // Once the uuid is stored the mount effect re-runs and looks the new worker up.
-    mockedService.getWorkerPhoneId.mockResolvedValue({ ...knownWorker, id: 'generated-uuid' });
+    mockedApi.getWorker.mockResolvedValue({ ...knownWorker, id: 'generated-uuid' });
     const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
@@ -57,17 +58,17 @@ describe('first launch (nothing stored)', () => {
     await fireEvent(screen.getByText('Daftar'), 'pressIn');
 
     await waitFor(() => expect(mockSecureStore.store.get('workerPhoneId')).toBe('generated-uuid'));
-    expect(mockedService.postWorkerId).toHaveBeenCalledWith({ id: 'generated-uuid', name: 'Yanto', fullname: 'Heriyanto' });
+    expect(mockedApi.createWorker).toHaveBeenCalledWith({ id: 'generated-uuid', name: 'Yanto', fullname: 'Heriyanto' });
   });
 
   it('stores nothing when registration is rejected', async () => {
-    mockedService.postWorkerId.mockResolvedValueOnce(false);
+    mockedApi.createWorker.mockResolvedValueOnce(false);
     const screen = await render(<RegisterScreen />);
     await waitFor(() => expect(screen.getByText('Daftar')).toBeTruthy());
 
     await fireEvent(screen.getByText('Daftar'), 'pressIn');
 
-    await waitFor(() => expect(mockedService.postWorkerId).toHaveBeenCalled());
+    await waitFor(() => expect(mockedApi.createWorker).toHaveBeenCalled());
     expect(mockSecureStore.store.has('workerPhoneId')).toBe(false);
   });
 });
@@ -75,7 +76,7 @@ describe('first launch (nothing stored)', () => {
 describe('returning user (uuid stored)', () => {
   it('looks the worker up by the stored uuid and replaces the stack with Home', async () => {
     mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
-    mockedService.getWorkerPhoneId.mockResolvedValue(knownWorker);
+    mockedApi.getWorker.mockResolvedValue(knownWorker);
 
     await render(<RegisterScreen />);
 
@@ -86,13 +87,13 @@ describe('returning user (uuid stored)', () => {
         breakStatusParam: false,
       })
     );
-    expect(mockedService.getWorkerPhoneId).toHaveBeenCalledWith('stored-uuid');
+    expect(mockedApi.getWorker).toHaveBeenCalledWith('stored-uuid');
   });
 
   it('shows the registration form again when the backend does not know the uuid', async () => {
     // Pinned as-is: the stale uuid stays in SecureStore; registering again overwrites it.
     mockSecureStore.store.set('workerPhoneId', 'stored-uuid');
-    mockedService.getWorkerPhoneId.mockResolvedValue({ ...knownWorker, id: '' });
+    mockedApi.getWorker.mockResolvedValue({ ...knownWorker, id: '' });
 
     const screen = await render(<RegisterScreen />);
 

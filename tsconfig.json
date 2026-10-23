@@ -4,8 +4,7 @@
     "strict": true,
     "types": [
       "jest"
-    ],
-    "moduleDetection": "auto"
+    ]
   },
   "include": [
     "**/*.ts",

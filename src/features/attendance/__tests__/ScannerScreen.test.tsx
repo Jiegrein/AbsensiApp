@@ -10,10 +10,10 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { render, waitFor } from '@testing-library/react-native';
-import ScannerScreen from '../src/screens/ScannerScreen';
-import ScannerService from '../src/services/ScannerService';
-import ScanEnum from '../src/Enum/ScanEnum';
-import { createSecureStoreMock } from './testUtils/secureStoreMock';
+import ScannerScreen from '../ScannerScreen';
+import { attendanceApi } from '../attendanceApi';
+import { ScanEnum } from '../types';
+import { createSecureStoreMock } from '../../../shared/testing/secureStoreMock';
 
 type ScanCallback = (result: { type: string; data: string }) => Promise<void>;
 const mockScan: { callback?: ScanCallback } = {};
@@ -29,12 +29,12 @@ jest.mock('expo-camera', () => {
   return { Camera, CameraView, PermissionStatus: { GRANTED: 'granted', DENIED: 'denied' } };
 });
 
-jest.mock('expo-secure-store', () => require('./testUtils/secureStoreMock').createSecureStoreMock());
+jest.mock('expo-secure-store', () => require('../../../shared/testing/secureStoreMock').createSecureStoreMock());
 const mockSecureStore = jest.requireMock('expo-secure-store') as ReturnType<typeof createSecureStoreMock>;
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
-jest.mock('../src/services/ScannerService');
+jest.mock('../attendanceApi');
 
-const mockedService = ScannerService as jest.Mocked<typeof ScannerService>;
+const mockedApi = attendanceApi as jest.Mocked<typeof attendanceApi>;
 const navigation = { navigate: jest.fn() };
 const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 
@@ -75,12 +75,12 @@ beforeEach(() => {
 
 describe('start work', () => {
   it('creates a log, stores logId and projectId, and returns Home as working', async () => {
-    mockedService.createLogId.mockResolvedValueOnce({ logId: 'log-1', projectId: PROJECT, message: '' });
+    mockedApi.createLog.mockResolvedValueOnce({ logId: 'log-1', projectId: PROJECT, message: '' });
     await renderScanner(ScanEnum.Start_Work);
 
     await scan(PROJECT);
 
-    expect(mockedService.createLogId).toHaveBeenCalledWith({ workerId: 'w-1', projectId: PROJECT, scanEnumId: ScanEnum.Start_Work });
+    expect(mockedApi.createLog).toHaveBeenCalledWith({ workerId: 'w-1', projectId: PROJECT, scanEnumId: ScanEnum.Start_Work });
     await waitFor(() => expect(mockSecureStore.store.get('LogId')).toBe('log-1'));
     expect(mockSecureStore.store.get('ProjectId')).toBe(PROJECT);
     expect(alertSpy).toHaveBeenCalledWith('Mulai Kerja', 'SELAMAT BEKERJA! - WORKING!', expect.any(Array));
@@ -89,7 +89,7 @@ describe('start work', () => {
   });
 
   it('shows the backend message when the log is rejected and stores nothing', async () => {
-    mockedService.createLogId.mockResolvedValueOnce({ logId: '', projectId: '', message: 'Sudah scan hari ini' });
+    mockedApi.createLog.mockResolvedValueOnce({ logId: '', projectId: '', message: 'Sudah scan hari ini' });
     await renderScanner(ScanEnum.Start_Work, false, false);
 
     await scan(PROJECT);
@@ -103,7 +103,7 @@ describe('start work', () => {
 
   it('throws when the service returns undefined (request never sent)', async () => {
     // KNOWN BUG: see services test; `undefined.logId` is dereferenced.
-    mockedService.createLogId.mockResolvedValueOnce(undefined as any);
+    mockedApi.createLog.mockResolvedValueOnce(undefined as any);
     await renderScanner(ScanEnum.Start_Work);
 
     await waitFor(() => expect(mockScan.callback).toBeDefined());
@@ -123,7 +123,7 @@ describe('scans after start work', () => {
     await scan(PROJECT);
 
     expect(alertSpy).toHaveBeenCalledWith('Belum mulai kerja', 'Scan mulai kerja terlebih dahulu', expect.any(Array));
-    expect(mockedService.updateLogId).not.toHaveBeenCalled();
+    expect(mockedApi.updateLog).not.toHaveBeenCalled();
     pressReturn();
     expect(navigation.navigate).toHaveBeenCalledWith('Home', homeParams(false, false));
   });
@@ -135,7 +135,7 @@ describe('scans after start work', () => {
     await scan('some-other-project');
 
     expect(alertSpy).toHaveBeenCalledWith('Error', 'Barcode yang di scan beda dengan yang pas mulai kerja', expect.any(Array));
-    expect(mockedService.updateLogId).not.toHaveBeenCalled();
+    expect(mockedApi.updateLog).not.toHaveBeenCalled();
     pressReturn();
     expect(navigation.navigate).toHaveBeenCalledWith('Home', homeParams(true, false));
   });
@@ -146,12 +146,12 @@ describe('scans after start work', () => {
     [ScanEnum.End_Work, 'Selesai Bekerja', 'SELESAI BEKERJA DENGAN BAIK - GOOD NIGHT', false, false],
   ])('scan %i updates the stored log and returns Home with the new status', async (scanEnum, title, message, work, brk) => {
     seedMorning();
-    mockedService.updateLogId.mockResolvedValueOnce(true);
+    mockedApi.updateLog.mockResolvedValueOnce(true);
     await renderScanner(scanEnum, true, scanEnum === ScanEnum.End_Break);
 
     await scan(PROJECT);
 
-    expect(mockedService.updateLogId).toHaveBeenCalledWith('log-1', { workerId: 'w-1', projectId: PROJECT, scanEnumId: scanEnum });
+    expect(mockedApi.updateLog).toHaveBeenCalledWith('log-1', { workerId: 'w-1', projectId: PROJECT, scanEnumId: scanEnum });
     expect(alertSpy).toHaveBeenCalledWith(title, message, expect.any(Array));
     pressReturn();
     expect(navigation.navigate).toHaveBeenCalledWith('Home', homeParams(work, brk));
@@ -159,7 +159,7 @@ describe('scans after start work', () => {
 
   it('reports "Lapor ke bos" when the update fails and keeps the current status', async () => {
     seedMorning();
-    mockedService.updateLogId.mockResolvedValueOnce(false);
+    mockedApi.updateLog.mockResolvedValueOnce(false);
     await renderScanner(ScanEnum.End_Work, true, false);
 
     await scan(PROJECT);
@@ -171,7 +171,7 @@ describe('scans after start work', () => {
 
   it('ignores a second scan while the first is being handled', async () => {
     seedMorning();
-    mockedService.updateLogId.mockResolvedValue(true);
+    mockedApi.updateLog.mockResolvedValue(true);
     const screen = await renderScanner(ScanEnum.End_Work, true, false);
 
     await scan(PROJECT);
