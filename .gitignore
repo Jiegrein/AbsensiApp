@@ -16,3 +16,6 @@ package-lock.json
 
 # macOS
 .DS_Store
+
+# local environment (copy from .env.example)
+.env
